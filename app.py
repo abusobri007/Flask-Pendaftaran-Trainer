@@ -25,20 +25,9 @@ class Peserta(db.Model):
   
   
 
-  def __repr__(self):
-    return self.nama
   
-@app.route("/list_pendaftaran/<id>/delete")
-def delete_pendafar(id):
-    obj = Peserta.query.filter_by(id=id).first()
-    db.session.delete(obj)
-    db.session.commit()
-    return redirect('/list_pendaftaran')
-
-
-
-
-
+@app.route("/list_img")
+def semuaphoto():
     return render_template("load_image.html")
 if "__main__" ==__name__:
      app.run(debug= True,port =2000)
