@@ -29,11 +29,27 @@ class Peserta(db.Model):
 
 
 
-@app.route("/list_pendaftaran")
-def semua_pendaftaran():
-    list_peserta = Peserta.query.all()
-    return render_template("list_pendaftaran.html",  tgl = "Tabel Peserta", lp=list_peserta)
-     
+
+@app.route('/tambah_peserta/')
+def semua_pendaftar():
+    return  render_template("tambah_peserta.html")
+
+@app.route("/tambah_peserta/save", methods=['POST'])
+def save_peserta():
+    if request.method == 'POST':
+        #membuat objek peserta
+       f_nama =request.form.get("nama")
+       f_alamat =request.form.get("alamat")
+       f_gender =request.form.get("gender")
+       f_umur =request.form.get("umur")
+       
+       p = Peserta(nama=f_nama, alamat=f_alamat,gender=f_gender, umur=f_umur, photo=f_photo)
+       
+       db.session.add(p)
+       db.session.commit()
+       return redirect('/list_pendaftaran')
+    return redirect('/tambah_peserta')
 
 
-
+if "__main__" ==__name__:
+     app.run(debug= True,port =2000)
