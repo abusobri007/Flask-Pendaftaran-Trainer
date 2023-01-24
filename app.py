@@ -8,6 +8,8 @@ import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///perserta.db'
+app.config['UPLOAD_FOLDER'] = os.path.abspath(os.path.dirname(__file__)) + "\static\media/"
+ALLOWED_EXTENSIONS = { 'pdf', 'png', 'jpg', 'jpeg'}
 
 db = SQLAlchemy(app)
 migrate = Migrate(app,db)
@@ -26,29 +28,55 @@ class Peserta(db.Model):
   def __repr__(self):
     return self.nama
   
+def allowed_file(filename):
+    return '.' in filename and \
+    filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+
+@app.route("/list_pendaftaran/<id>/edit")
+def edit_peserta(id):
+    obj = Peserta.query.filter_by(id=id).first()
+    return render_template("edit_peserta.html",obj=obj)
+
+@app.route("/list_pendaftaran/<id>/update", methods=['POST'])
+def update_peserta(id):
+    obj = Peserta.query.filter_by(id=id).first()#data from db
+ #data from cline server
+    f_nama = request.form.get("nama")
+    f_alamat = request.form.get("alamat")
+    f_gender = request.form.get("gender")
+    f_umur = request.form.get("umur")
+    photo = request.files['Photo']
+    print(photo.filename)
+    
+    if photo.filename== '':
+           flash("Photo tidak boleh kosong")
+    
+    if photo and allowed_file(photo.filename):
+       filename= secure_filename(photo.filename)
+
+       photo.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+       f_photo = os.path.join('static\media', filename)
+    #data form db whiht data from cline server
+    obj.nama=f_nama
+    obj.alamat=f_alamat
+    obj.gender=f_gender
+    obj.umur=f_umur
+    obj.photo=f_photo
+
+    #save perubahan data ke db
+
+    db.session.add(obj)
+    db.session.commit()
+    return redirect('/list_pendaftaran')
 
 
 
 
-@app.route('/tambah_peserta/')
-def semua_pendaftar():
-    return  render_template("tambah_peserta.html")
-
-@app.route("/tambah_peserta/save", methods=['POST'])
-def save_peserta():
-    if request.method == 'POST':
-        #membuat objek peserta
-       f_nama =request.form.get("nama")
-       f_alamat =request.form.get("alamat")
-       f_gender =request.form.get("gender")
-       f_umur =request.form.get("umur")
+    
        
-       p = Peserta(nama=f_nama, alamat=f_alamat,gender=f_gender, umur=f_umur, photo=f_photo)
-       
-       db.session.add(p)
-       db.session.commit()
-       return redirect('/list_pendaftaran')
-    return redirect('/tambah_peserta')
+    
 
 
 if "__main__" ==__name__:
